@@ -7,3 +7,15 @@ https://docs.google.com/spreadsheets/d/1a8y_awyQa8ON-Y7WlzSzk3OCoIJYemhQLntR6cPD
 * Add http://arduino.esp8266.com/stable/package_esp8266com_index.json to Additional Board Manager's URL in the Arduino IDE (v1.8.18)
 * Connect to Thermocouple Arduino through wifi using a phone 
 * Connect Thermocouple Arduino to the internet by connecting to wifi using a phone
+
+## Aruduino configuration
+
+> as of now we assume the device is Adafruit Feather HUZZAH ESP8266
+
+Libraries needed:
+Adafruit_GFX
+Adafruit_SSD1306
+Adafruit_MAX31855
+
+WiFiManager
+> WiFiManager by tzapu is what we have assumed, could be wrong
