@@ -13,9 +13,9 @@ https://docs.google.com/spreadsheets/d/1a8y_awyQa8ON-Y7WlzSzk3OCoIJYemhQLntR6cPD
 > as of now we assume the device is Adafruit Feather HUZZAH ESP8266
 
 Libraries needed:
-Adafruit_GFX
-Adafruit_SSD1306
-Adafruit_MAX31855
+Adafruit_GFX\n
+Adafruit_SSD1306\n
+Adafruit_MAX31855\n
 
 WiFiManager
 > WiFiManager by tzapu is what we have assumed, could be wrong
