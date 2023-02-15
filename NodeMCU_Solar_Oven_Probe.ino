@@ -221,7 +221,7 @@ void loop(){
               //displayFarh = !displayFarh;
               display.display();
               //set delay on how often to check temp
-              delay(10000); // Pause for 10 seconds
+              delay(1000); // Pause for 10 seconds
             
               //If we are online, report the temperature
               String temp = WiFi.localIP().toString();
