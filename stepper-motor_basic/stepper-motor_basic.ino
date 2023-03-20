@@ -9,7 +9,7 @@
 int Steps = 0;
 int steps_left=50;
 int pos = -1;
-boolean Direction = true; //true -> clockwise, false -> counter-clockwise
+int Direction = CW; //true -> clockwise, false -> counter-clockwise
 
 // time variables
 unsigned long last_time;
