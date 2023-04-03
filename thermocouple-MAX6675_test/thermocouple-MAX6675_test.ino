@@ -3,8 +3,8 @@
 #include "max6675.h"
 
 int thermoSO = D4;
-int thermoCS = D5;
-int thermoCLK = D6;
+int thermoCS = D3;
+int thermoCLK = D2;
 
 MAX6675 thermocouple(thermoCLK, thermoCS, thermoSO);
 
