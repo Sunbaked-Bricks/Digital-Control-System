@@ -64,15 +64,7 @@ void setup() {
   display.setCursor(0, 0);
   display.display();      // Show initial text
   delay(2000);
-  // Probe setup
-  //Serial.begin(9600);
-  //pinMode(fanPin,OUTPUT);
-  //Serial.println("MAX31855 test");
-  //display.println("MAX31855 test");
-  //linecount += 1;
-  display.display();      // Show initial text
-  // wait for MAX chip to stabilize
-  delay(500);
+  // SETUP LCD DISPLAY //
 
   // SETUP WEBSERVER //
   // set wifi configuration
@@ -108,12 +100,28 @@ void loop() {
 
   // test webserver
   server.handleClient();
+
+  // test lcd screen
+  update_screen();
   
   // For the MAX6675 to update, you must delay AT LEAST 250ms between reads!
   delay(1000);
 }
 
 //--
+
+///* LCD SCREEN FUNCTIONS
+void update_screen() {
+  // setup 
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.setTextSize(1); // Draw 2X-scale text
+
+ 
+  
+  display.display();
+}
+//*/
 
 ///* WEBSERVER FUNCTIONS
 // this function is called whenever the app requests the temperature readings from the thermocouple
