@@ -150,7 +150,7 @@ void setup(){
 
 void loop(){
   if (WiFi.status() == WL_CONNECTED){
-          while(WiFi.status() == WL_CONNECTED){ 
+          while(WiFi.status() == WL_CONNECTED){
             //The code within this while statement is the original code          
               displayConnectionStatus();
               double controlCel,controlFarh,probeCel,probeFarh;
@@ -181,6 +181,7 @@ void loop(){
                 //probeFarh = (probeCel*9)/5 +32;
               }
               String dataString = "https://script.google.com/macros/s/AKfycbxcUAeg5-5sXFpilqjyCp6gf1LW6KWw7Xn2bBnEYHhgtOau0VtY-oxenxmxIYVrv4vw/exec?BoardTempC="+String(controlCel)+"&BoardTempF="+String(controlFarh)+"&ProbeTempC="+String(probeCel)+"&ProbeTempF="+String(probeFarh);
+              
               //Display the Temperature at the board
               display.setTextSize(1); // Draw 2X-scale text
               display.setCursor(0, 16);
@@ -199,6 +200,7 @@ void loop(){
                 display.write(248);
                 display.print("C");
               }
+              
               //Display the Temperature at the probe
               display.setTextSize(1); // Draw 2X-scale text
               display.setCursor(0, 32);
@@ -217,6 +219,7 @@ void loop(){
                 display.write(248);
                 display.print("C");
               }
+              
               //this line causes toggle between farenhiet and celcious
               //displayFarh = !displayFarh;
               display.display();
@@ -293,7 +296,7 @@ void loop(){
                 // Free resources
                 http.end();
               }
-          }              
+          }
   }
   
 
