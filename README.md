@@ -14,6 +14,8 @@ Then pull this repository and open it in the IDE.
 
 ## Aruduino configuration
 
+Board Used:
+
 > Adafruit Feather HUZZAH ESP8266
 
 Libraries needed:
@@ -22,7 +24,7 @@ Libraries needed:
 * Adafruit_MAX31855
 
 WiFiManager
-> WiFiManager by tzapu
+* WiFiManager by tzapu
 
 ## Use
 
