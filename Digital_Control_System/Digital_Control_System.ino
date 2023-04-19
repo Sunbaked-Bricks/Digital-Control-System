@@ -25,7 +25,7 @@ int tar_temp = 0;
 // THERMOCOUPLE INIT //
 #include "max6675.h"
 
-int thermoCLK = D1;
+int thermoCLK = D0;
 int thermoCS = D3;
 int thermoSO = D4;
 
@@ -44,6 +44,7 @@ MAX6675 thermocouple(thermoCLK, thermoCS, thermoSO);
 int Steps = 0;
 int steps_left=50;
 int pos = -1;
+int step_pos = 0;
 int Direction = CW; //true -> clockwise, false -> counter-clockwise
 // STEPPER MOTOR INIT //
 
@@ -70,8 +71,13 @@ void setup() {
 
   // web-server html pages
   server.on("/", handle_OnConnect);
+  server.on("/returnHome", handle_returnHome);
   server.on("/info", handle_post);
   server.on("/getTemp", handle_temp);
+  server.on("/stepLeft", handle_stepLeft);
+  server.on("/stepRight", handle_stepRight);
+  server.on("/stepLeftTen", handle_stepLeftTen);
+  server.on("/stepRightTen", handle_stepRightTen);
   server.onNotFound(handle_NotFound);
   
   // start server
@@ -120,14 +126,15 @@ void loop() {
 
   // THERMOCOUPLE LOOP //
   // basic readout test, just print the current temp
-  cur_temp = thermocouple.readFahrenheit();
+  cur_temp = thermocouple.readFahrenheit();  
+  Serial.print("C = "); Serial.print(thermocouple.readCelsius()); Serial.print(" | F = "); Serial.println(thermocouple.readFahrenheit());
   
   // For the MAX6675 to update, you must delay AT LEAST 250ms between reads!
   delay(1000);
   // THERMOCOUPLE LOOP //
   
   // STEPPER MOTOR LOOP //
-  step_x(5, CW);
+  //step_x(5, CW);
   // STEPPER MOTOR LOOP //
   
   // OLED LOOP //  
@@ -139,9 +146,38 @@ void loop() {
 
 // WIFI WEBSERVER FUNCTIONS //
 // this function is called whenever the app requests the temperature readings from the thermocouple
+void handle_returnHome() {
+  Serial.println("home page requested");
+  server.send(200, "text/html", SendHomeHTML());
+}
+
 void handle_temp() {
   Serial.println("temperature requested");
   server.send(200, "text/plain", String(cur_temp));
+}
+
+void handle_stepLeft() {
+  Serial.println("step left requested");
+  server.send(200, "text/html", SendHomeHTML());
+  step_once(CCW);
+}
+
+void handle_stepRight() {
+  Serial.println("step left requested");
+  server.send(200, "text/html", SendHomeHTML());
+  step_once(CW);
+}
+
+void handle_stepRightTen() {
+  Serial.println("step right requested");
+  server.send(200, "text/html", SendHomeHTML());
+  step_x(CW, 10);
+}
+
+void handle_stepLeftTen() {
+  Serial.println("step left requested");
+  server.send(200, "text/html", SendHomeHTML());
+  step_x(CCW, 10);
 }
 
 void handle_post(){
@@ -185,6 +221,13 @@ String SendHomeHTML(){
 
   ptr +="<p>Target Temperature: " + String(tar_temp) + "</p>";
   ptr +="<p>Current Temperature: " + String(cur_temp) + "</p>";
+  ptr +="<p>Absolute Step Position: " + String(step_pos) + "</p>"; // this should probably be able to get reset
+
+  ptr +="<p>Home</p><a class=\"button button-on\" href=\"/returnHome\">Home</a>\n";
+  ptr +="<p>Step Left</p><a class=\"button button-on\" href=\"/stepLeft\">CCW 1</a>\n";
+  ptr +="<p>Step Right</p><a class=\"button button-on\" href=\"/stepRight\">CW 1</a>\n";
+  ptr +="<p>Step Left x10</p><a class=\"button button-on\" href=\"/stepLeftTen\">CCW 10</a>\n";
+  ptr +="<p>Step Right x10</p><a class=\"button button-on\" href=\"/stepRightTen\">CW 10</a>\n";
 
   ptr +="</body>\n";
   ptr +="</html>\n";
@@ -194,7 +237,7 @@ String SendHomeHTML(){
 
 
 // STEPPER MOTOR FUNCTIONS //
-void step_x(int x, int Direction) {
+void step_x(int Direction, int x) {
   for (int i = 0; i < x; i++) {
     step_once(Direction);
   }
@@ -204,9 +247,11 @@ void step_once(int Direction) {
   // handle direction of step
   if (Direction == 1) {
     pos += 1;
+    step_pos += 1;
     if (pos > 7) pos = 0;
   } else if (Direction == 0) {
     pos -= 1;
+    step_pos -= 1;
     if (pos < 0) pos = 7;
   } else {
     Serial.print("ERROR: Invalid Turn Direction ["); Serial.print(Direction); Serial.println("]");
@@ -280,12 +325,11 @@ void update_screen() {
   // setup 
   display.clearDisplay();
 
-  //
-  display.setCursor(0, 0);
+  //Display the Temperature at the probe
   display.setTextSize(2); // Draw 2X-scale text
   display.setCursor(0, 32);
   display.print("TEMP (F): ");
-  display.print(10000);
+  display.print(cur_temp);
   
   display.display();
 }
