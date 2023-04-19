@@ -7,7 +7,6 @@ int thermoCLK = D1;
 int thermoCS = D3;
 int thermoSO = D4;
 
-int cur_temp = 0;
 MAX6675 thermocouple(thermoCLK, thermoCS, thermoSO);
 // THERMOCOUPLE INIT //
 
@@ -20,15 +19,11 @@ void setup() {
 }
 
 void loop() {
-  // THERMOCOUPLE EXAMPLE //
+  // THERMOCOUPLE LOOP //
   // basic readout test, just print the current temp
-  cur_temp = thermocouple.readFahrenheit();
-  Serial.print("C = "); 
-  Serial.print(thermocouple.readCelsius());
-  Serial.print(" | F = ");
-  Serial.println(cur_temp);
- 
+  Serial.print(thermocouple.readFahrenheit());
+  
   // For the MAX6675 to update, you must delay AT LEAST 250ms between reads!
   delay(1000);
-  // THERMOCOUPLE EXAMPLE //
+  // THERMOCOUPLE LOOP //
 }

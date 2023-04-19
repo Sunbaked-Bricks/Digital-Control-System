@@ -30,9 +30,9 @@ void setup() {
 }
 
 void loop() {
-  // OLED EXAMPLE //  
+  // OLED LOOP //  
   update_screen();
-  // OLED EXAMPLE //
+  // OLED LOOP //
 }
 
 // OLED FUNCTIONS //

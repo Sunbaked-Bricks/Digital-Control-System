@@ -25,12 +25,18 @@ void setup()
 }
 
 void loop(){
-  // example usage
+  // STEPPER MOTOR LOOP //
   step_once(CW);
-  delay(1000);
+  // STEPPER MOTOR LOOP //
 }
 
 // STEPPER MOTOR FUNCTIONS //
+void step_x(int x, int Direction) {
+  for (int i = 0; i < x; i++) {
+    step_once(Direction);
+  }
+}
+
 void step_once(int Direction) {
   // handle direction of step
   if (Direction == 1) {
@@ -100,5 +106,8 @@ void step_once(int Direction) {
      digitalWrite(IN4, LOW);
    break; 
   }
+
+  // control turn rate
+  delay(1000);
 }
 // STEPPER MOTOR FUNCTIONS //

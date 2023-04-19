@@ -83,6 +83,7 @@ void setup() {
   // start server
   server.begin();
   Serial.println("HTTP server started");
+  // SETUP WEBSERVER //
 
 
   // SETUP THERMOCOUPLE //
@@ -102,8 +103,9 @@ void loop() {
   cur_temp = thermocouple.readFarenheit();
   Serial.print("C = "); Serial.print(thermocouple.readCelsius()); Serial.print(" | F = "); Serial.println(thermocouple.readFahrenheit());
 
-  // test webserver
+  // WEBSERVER LOOP //
   server.handleClient();
+  // WEBSERVER LOOP //
   
   // For the MAX6675 to update, you must delay AT LEAST 250ms between reads!
   delay(1000);
@@ -186,7 +188,7 @@ void step_once(int Direction) {
 
 //--
 
-///* WEBSERVER FUNCTIONS
+// WIFI WEBSERVER FUNCTIONS //
 // this function is called whenever the app requests the temperature readings from the thermocouple
 void handle_temp() {
   Serial.println("temperature requested");
@@ -239,4 +241,4 @@ String SendHomeHTML(){
   ptr +="</html>\n";
   return ptr;
 }
-// WEBSERVER FUNCTIONS */
+// WIFI WEBSERVER FUNCTIONS //
