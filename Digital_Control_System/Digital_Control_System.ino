@@ -151,10 +151,8 @@ void loop() {
   // RELAY LOOP //
   // the relay is controlled from the webserver commands
   if (cur_temp > max_temp) {
-    force_shutdown();
-  } else if (cur_temp < tar_temp && relay_status == 0) {
-    start_oven();
-  }
+    force_shutdown(); // not sure how to handle a message from the arduino to the app
+  } 
   // RELAY LOOP //
   
   // OLED LOOP //  
