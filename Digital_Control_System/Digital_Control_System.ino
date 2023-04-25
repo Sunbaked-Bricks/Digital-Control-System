@@ -32,6 +32,11 @@ int thermoSO = D4;
 MAX6675 thermocouple(thermoCLK, thermoCS, thermoSO);
 // THERMOCOUPLE INIT //
 
+// RELAY INIT //
+// We are reusing IN4 as the control for the relay
+int relay_status = 0;
+// RELAY INIT //
+
 // STEPPER MOTOR INIT //
 #define IN1  D5
 #define IN2  D6
@@ -74,6 +79,10 @@ void setup() {
   server.on("/returnHome", handle_returnHome);
   server.on("/info", handle_post);
   server.on("/getTemp", handle_temp);
+  
+  server.on("/relayOn", handle_relayOn);
+  server.on("/relayOff", handle_relayOff);
+  
   server.on("/stepLeft", handle_stepLeft);
   server.on("/stepRight", handle_stepRight);
   server.on("/stepLeftTen", handle_stepLeftTen);
@@ -89,7 +98,7 @@ void setup() {
   // wait for MAX chip to stabilize
   delay(500);
   // THERMOCOUPLE SETUP //
-  
+
   // STEPPER MOTOR SETUP //
   Serial.begin(9600);
   pinMode(IN1, OUTPUT); 
@@ -97,6 +106,10 @@ void setup() {
   pinMode(IN3, OUTPUT); 
   pinMode(IN4, OUTPUT); 
   // STEPPER MOTOR SETUP //
+  
+  // RELAY SETUP //
+  digitalWrite(IN4, LOW);
+  // RELAY SETUP //
   
   // OLED SETUP //
   // Display Setup
@@ -133,8 +146,12 @@ void loop() {
   delay(1000);
   // THERMOCOUPLE LOOP //
   
+  // RELAY LOOP //
+  // the stepper motor is controlled from the webserver commands
+  // RELAY LOOP //
+  
   // STEPPER MOTOR LOOP //
-  //step_x(5, CW);
+  // the stepper motor is controlled from the webserver commands
   // STEPPER MOTOR LOOP //
   
   // OLED LOOP //  
@@ -154,6 +171,16 @@ void handle_returnHome() {
 void handle_temp() {
   Serial.println("temperature requested");
   server.send(200, "text/plain", String(cur_temp));
+}
+
+void handle_relayOn(){
+  close_relay();
+  server.send(200, "text/html", SendHomeHTML());
+}
+
+void handle_relayOff(){
+  open_relay();
+  server.send(200, "text/html", SendHomeHTML());
 }
 
 void handle_stepLeft() {
@@ -224,10 +251,21 @@ String SendHomeHTML(){
   ptr +="<p>Absolute Step Position: " + String(step_pos) + "</p>"; // this should probably be able to get reset
 
   ptr +="<p>Home</p><a class=\"button button-on\" href=\"/returnHome\">Home</a>\n";
+
+  if (relay_status) {
+    // if relay status == 1, the relay button should be used to turn the relay off
+    ptr +="<p>Oven Control</p><a class=\"button button-on\" href=\"/relayOff\">On</a>\n";
+  } else {
+    // if relay status == 0, the relay button should be used to turn the relay on
+    ptr +="<p>Oven Control</p><a class=\"button button-off\" href=\"/relayOn\">Off</a>\n";    
+  }
+
+  /*
   ptr +="<p>Step Left</p><a class=\"button button-on\" href=\"/stepLeft\">CCW 1</a>\n";
   ptr +="<p>Step Right</p><a class=\"button button-on\" href=\"/stepRight\">CW 1</a>\n";
   ptr +="<p>Step Left x10</p><a class=\"button button-on\" href=\"/stepLeftTen\">CCW 10</a>\n";
   ptr +="<p>Step Right x10</p><a class=\"button button-on\" href=\"/stepRightTen\">CW 10</a>\n";
+  */
 
   ptr +="</body>\n";
   ptr +="</html>\n";
@@ -235,6 +273,17 @@ String SendHomeHTML(){
 }
 // WIFI WEBSERVER FUNCTIONS //
 
+// RELAY FUNCTIONS //
+void close_relay(){
+  relay_status = 1;
+  digitalWrite(IN4, HIGH);
+}
+
+void open_relay(){
+  relay_status = 0;
+  digitalWrite(IN4, LOW);
+}
+// RELAY FUNCTIONS //
 
 // STEPPER MOTOR FUNCTIONS //
 void step_x(int Direction, int x) {
