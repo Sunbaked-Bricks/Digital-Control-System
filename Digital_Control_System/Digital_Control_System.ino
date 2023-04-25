@@ -34,7 +34,8 @@ MAX6675 thermocouple(thermoCLK, thermoCS, thermoSO);
 
 // RELAY INIT //
 // We are reusing IN4 as the control for the relay
-int relay_status = 0;
+int relay_status = 0; // the relay is intialized to turn the oven off
+int max_temp = 5000;
 // RELAY INIT //
 
 // STEPPER MOTOR INIT //
@@ -79,6 +80,7 @@ void setup() {
   server.on("/returnHome", handle_returnHome);
   server.on("/info", handle_post);
   server.on("/getTemp", handle_temp);
+  server.on("/setMaxTemp", handle_setMaxTemp);
   
   server.on("/relayOn", handle_relayOn);
   server.on("/relayOff", handle_relayOff);
@@ -147,12 +149,13 @@ void loop() {
   // THERMOCOUPLE LOOP //
   
   // RELAY LOOP //
-  // the stepper motor is controlled from the webserver commands
+  // the relay is controlled from the webserver commands
+  if (cur_temp > max_temp) {
+    force_shutdown();
+  } else if (cur_temp < tar_temp && relay_status == 0) {
+    start_oven();
+  }
   // RELAY LOOP //
-  
-  // STEPPER MOTOR LOOP //
-  // the stepper motor is controlled from the webserver commands
-  // STEPPER MOTOR LOOP //
   
   // OLED LOOP //  
   update_screen();
@@ -160,12 +163,65 @@ void loop() {
 }
 
 
+// DIGITAL CONTROL SYSTEM FUNCTIONS //
+void start_oven() {
+  // turn on oven
+  close_relay();
+}
+
+void force_shutdown() {
+  // shutdown the oven
+  open_relay();
+
+  // prevent the oven from turning on until the internal temperature reaches a safe level
+  // maintain basic functions
+  while(cur_temp > max_temp) {
+    // handle server 
+    server.handleClient();
+
+    // read internal temperature
+    cur_temp = thermocouple.readFahrenheit();  
+    Serial.print("C = "); Serial.print(thermocouple.readCelsius()); Serial.print(" | F = "); Serial.println(thermocouple.readFahrenheit());
+    delay(1000); // For the MAX6675 to update, you must delay AT LEAST 250ms between reads!
+
+    // update OLED screen
+    update_screen();
+  }
+  
+}
+// DIGITAL CONTROL SYSTEM FUNCTIONS //
+
+// RELAY FUNCTIONS //
+void close_relay(){ // turn the oven on
+  relay_status = 1;
+  digitalWrite(IN4, HIGH);
+}
+
+void open_relay(){ // turn the oven off
+  // prevent the oven from turning on when the temperature is too high
+  if (cur_temp < max_temp) {
+    relay_status = 0;
+    digitalWrite(IN4, LOW);
+  }
+}
+// RELAY FUNCTIONS //
 
 // WIFI WEBSERVER FUNCTIONS //
 // this function is called whenever the app requests the temperature readings from the thermocouple
 void handle_returnHome() {
   Serial.println("home page requested");
   server.send(200, "text/html", SendHomeHTML());
+}
+
+void handle_setMaxTemp() {
+  String input = server.arg("plain");
+  DynamicJsonDocument doc(1024);
+  
+  DeserializationError error = deserializeJson(doc, input);
+  
+  max_temp = doc["temp"];
+  Serial.print("max temperature set to: "); Serial.println(max_temp);
+  server.send(200, "text/html", SendHomeHTML()); 
 }
 
 void handle_temp() {
@@ -248,6 +304,7 @@ String SendHomeHTML(){
 
   ptr +="<p>Target Temperature: " + String(tar_temp) + "</p>";
   ptr +="<p>Current Temperature: " + String(cur_temp) + "</p>";
+  ptr +="<p>Max Temperature: " + String(max_temp) + "</p>";
   ptr +="<p>Absolute Step Position: " + String(step_pos) + "</p>"; // this should probably be able to get reset
 
   ptr +="<p>Home</p><a class=\"button button-on\" href=\"/returnHome\">Home</a>\n";
@@ -273,17 +330,6 @@ String SendHomeHTML(){
 }
 // WIFI WEBSERVER FUNCTIONS //
 
-// RELAY FUNCTIONS //
-void close_relay(){
-  relay_status = 1;
-  digitalWrite(IN4, HIGH);
-}
-
-void open_relay(){
-  relay_status = 0;
-  digitalWrite(IN4, LOW);
-}
-// RELAY FUNCTIONS //
 
 // STEPPER MOTOR FUNCTIONS //
 void step_x(int Direction, int x) {
