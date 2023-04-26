@@ -33,26 +33,10 @@ MAX6675 thermocouple(thermoCLK, thermoCS, thermoSO);
 // THERMOCOUPLE INIT //
 
 // RELAY INIT //
-// We are reusing IN4 as the control for the relay
-int relay_status = 0; // the relay is intialized to turn the oven off
-int max_temp = 5000;
-// RELAY INIT //
-
-// STEPPER MOTOR INIT //
-#define IN1  D5
-#define IN2  D6
-#define IN3  D7
 #define IN4  D8
-#define CW   1
-#define CCW  0
-
-// motor variables
-int Steps = 0;
-int steps_left=50;
-int pos = -1;
-int step_pos = 0;
-int Direction = CW; //true -> clockwise, false -> counter-clockwise
-// STEPPER MOTOR INIT //
+int relay_status = 0; // the relay is intialized to turn the oven off
+int max_temp = 3000;
+// RELAY INIT //
 
 // OLED INIT //
 #include <Adafruit_SSD1306.h>
@@ -65,7 +49,6 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 // OLED INIT //
 
 
-
 void setup() {
   Serial.begin(9600);
   
@@ -75,21 +58,17 @@ void setup() {
   WiFi.softAPConfig(local_ip, gateway, subnet);
   delay(100);
 
-  // web-server html pages
+  // setup web-server html handles
   server.on("/", handle_OnConnect);
   server.on("/returnHome", handle_returnHome);
   server.on("/info", handle_post);
+  server.onNotFound(handle_NotFound);
+
   server.on("/getTemp", handle_temp);
   server.on("/setMaxTemp", handle_setMaxTemp);
   
   server.on("/relayOn", handle_relayOn);
   server.on("/relayOff", handle_relayOff);
-  
-  server.on("/stepLeft", handle_stepLeft);
-  server.on("/stepRight", handle_stepRight);
-  server.on("/stepLeftTen", handle_stepLeftTen);
-  server.on("/stepRightTen", handle_stepRightTen);
-  server.onNotFound(handle_NotFound);
   
   // start server
   server.begin();
@@ -101,15 +80,8 @@ void setup() {
   delay(500);
   // THERMOCOUPLE SETUP //
 
-  // STEPPER MOTOR SETUP //
-  Serial.begin(9600);
-  pinMode(IN1, OUTPUT); 
-  pinMode(IN2, OUTPUT); 
-  pinMode(IN3, OUTPUT); 
-  pinMode(IN4, OUTPUT); 
-  // STEPPER MOTOR SETUP //
-  
   // RELAY SETUP //
+  pinMode(IN4, OUTPUT); 
   digitalWrite(IN4, LOW);
   // RELAY SETUP //
   
@@ -131,7 +103,6 @@ void setup() {
   delay(2000);
   // OLED SETUP //
 }
-
 
 
 void loop() {
@@ -237,30 +208,6 @@ void handle_relayOff(){
   server.send(200, "text/html", SendHomeHTML());
 }
 
-void handle_stepLeft() {
-  Serial.println("step left requested");
-  server.send(200, "text/html", SendHomeHTML());
-  step_once(CCW);
-}
-
-void handle_stepRight() {
-  Serial.println("step left requested");
-  server.send(200, "text/html", SendHomeHTML());
-  step_once(CW);
-}
-
-void handle_stepRightTen() {
-  Serial.println("step right requested");
-  server.send(200, "text/html", SendHomeHTML());
-  step_x(CW, 10);
-}
-
-void handle_stepLeftTen() {
-  Serial.println("step left requested");
-  server.send(200, "text/html", SendHomeHTML());
-  step_x(CCW, 10);
-}
-
 void handle_post(){
   String input = server.arg("plain");
   DynamicJsonDocument doc(1024);
@@ -303,7 +250,6 @@ String SendHomeHTML(){
   ptr +="<p>Target Temperature: " + String(tar_temp) + "</p>";
   ptr +="<p>Current Temperature: " + String(cur_temp) + "</p>";
   ptr +="<p>Max Temperature: " + String(max_temp) + "</p>";
-  ptr +="<p>Absolute Step Position: " + String(step_pos) + "</p>"; // this should probably be able to get reset
 
   ptr +="<p>Home</p><a class=\"button button-on\" href=\"/returnHome\">Home</a>\n";
 
@@ -315,103 +261,11 @@ String SendHomeHTML(){
     ptr +="<p>Oven Control</p><a class=\"button button-off\" href=\"/relayOn\">Off</a>\n";    
   }
 
-  /*
-  ptr +="<p>Step Left</p><a class=\"button button-on\" href=\"/stepLeft\">CCW 1</a>\n";
-  ptr +="<p>Step Right</p><a class=\"button button-on\" href=\"/stepRight\">CW 1</a>\n";
-  ptr +="<p>Step Left x10</p><a class=\"button button-on\" href=\"/stepLeftTen\">CCW 10</a>\n";
-  ptr +="<p>Step Right x10</p><a class=\"button button-on\" href=\"/stepRightTen\">CW 10</a>\n";
-  */
-
   ptr +="</body>\n";
   ptr +="</html>\n";
   return ptr;
 }
 // WIFI WEBSERVER FUNCTIONS //
-
-
-// STEPPER MOTOR FUNCTIONS //
-void step_x(int Direction, int x) {
-  for (int i = 0; i < x; i++) {
-    step_once(Direction);
-  }
-}
-
-void step_once(int Direction) {
-  // handle direction of step
-  if (Direction == 1) {
-    pos += 1;
-    step_pos += 1;
-    if (pos > 7) pos = 0;
-  } else if (Direction == 0) {
-    pos -= 1;
-    step_pos -= 1;
-    if (pos < 0) pos = 7;
-  } else {
-    Serial.print("ERROR: Invalid Turn Direction ["); Serial.print(Direction); Serial.println("]");
-  }
-
-  // step
-  switch(pos){
-   case 0:
-     digitalWrite(IN1, LOW); 
-     digitalWrite(IN2, LOW);
-     digitalWrite(IN3, LOW);
-     digitalWrite(IN4, HIGH);
-   break; 
-   case 1:
-     digitalWrite(IN1, LOW); 
-     digitalWrite(IN2, LOW);
-     digitalWrite(IN3, HIGH);
-     digitalWrite(IN4, HIGH);
-   break; 
-   case 2:
-     digitalWrite(IN1, LOW); 
-     digitalWrite(IN2, LOW);
-     digitalWrite(IN3, HIGH);
-     digitalWrite(IN4, LOW);
-   break; 
-   case 3:
-     digitalWrite(IN1, LOW); 
-     digitalWrite(IN2, HIGH);
-     digitalWrite(IN3, HIGH);
-     digitalWrite(IN4, LOW);
-   break; 
-   case 4:
-     digitalWrite(IN1, LOW); 
-     digitalWrite(IN2, HIGH);
-     digitalWrite(IN3, LOW);
-     digitalWrite(IN4, LOW);
-   break; 
-   case 5:
-     digitalWrite(IN1, HIGH); 
-     digitalWrite(IN2, HIGH);
-     digitalWrite(IN3, LOW);
-     digitalWrite(IN4, LOW);
-   break; 
-     case 6:
-     digitalWrite(IN1, HIGH); 
-     digitalWrite(IN2, LOW);
-     digitalWrite(IN3, LOW);
-     digitalWrite(IN4, LOW);
-   break; 
-   case 7:
-     digitalWrite(IN1, HIGH); 
-     digitalWrite(IN2, LOW);
-     digitalWrite(IN3, LOW);
-     digitalWrite(IN4, HIGH);
-   break; 
-   default:
-     digitalWrite(IN1, LOW); 
-     digitalWrite(IN2, LOW);
-     digitalWrite(IN3, LOW);
-     digitalWrite(IN4, LOW);
-   break; 
-  }
-  
-  // control turn rate
-  delay(1000);
-}
-// STEPPER MOTOR FUNCTIONS //
 
 // OLED FUNCTIONS //
 void update_screen() {
