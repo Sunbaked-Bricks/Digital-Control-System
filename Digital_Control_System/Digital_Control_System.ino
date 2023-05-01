@@ -35,7 +35,7 @@ MAX6675 thermocouple(thermoCLK, thermoCS, thermoSO);
 // RELAY INIT //
 #define IN4  D8
 int relay_status = 0; // the relay is intialized to turn the oven off
-int max_temp = 3000;
+int max_temp = 300;
 // RELAY INIT //
 
 // OLED INIT //
